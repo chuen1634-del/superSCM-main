@@ -3,7 +3,7 @@
 > 기기·옵션 월간 발주계획 MVP의 현재 코드 구조와 파일별 책임을 정리한 문서입니다.
 >
 > 기준일: 2026-08-27  
-> 기준 상태: Phase 1 업무 흐름 프로토타입 + Phase 2 Supabase 리드타임 분석 예제
+> 기준 상태: Phase 1 업무 흐름 프로토타입 + Supabase 리드타임·소진위험 분석 화면
 
 ## 1. 한눈에 보는 요약
 
@@ -17,6 +17,7 @@
 |---|---|---|
 | `/` | 6단계 업무 흐름을 보여주는 단일 클라이언트 화면 | 컴포넌트 내부 샘플 데이터 |
 | `/analysis/leadtime` | 공급처별 마스터 리드타임과 실적 P80 격차 분석 | Supabase `analytics.v_leadtime_gap` 조회 |
+| `/analysis/stockout` | 품목별 재고 소진 위험 분석 | Supabase `analytics.v_stockout_risk`, `v_stockout_kpi` 조회 |
 | `/api/health/supabase` | Supabase 환경변수 설정 여부 확인 | 환경변수만 확인, DB 조회 없음 |
 | `lib/scm-model.ts` | 분석 행 타입과 컬럼명 정규화 | 순수 함수 |
 | `lib/scm.ts` | 분석용 Supabase 조회 함수 | 서버에서 조회 |
@@ -96,9 +97,10 @@ Next.js 서버 페이지 / 분석 컴포넌트
 |---|---|---|
 | `app/` | Next.js App Router 라우트와 전역 스타일 | 루트 레이아웃, 홈 화면, 분석 화면, 헬스 API, CSS |
 | `app/analysis/leadtime/` | 리드타임 분석 라우트 | Supabase 결과를 KPI와 표로 렌더링 |
+| `app/analysis/stockout/` | 소진위험 분석 라우트 | 소진위험 KPI와 품목별 위험 표 렌더링 |
 | `app/api/health/supabase/` | Supabase 설정 상태 API | 환경변수 유무를 JSON으로 응답 |
 | `components/` | 화면 조합과 재사용 UI | 전체 앱 셸, 분석 프레임·표, 6개 업무 단계 |
-| `components/analysis/` | 분석 화면 공통 UI | 분석 페이지 외곽과 범용 데이터 표 |
+| `components/analysis/` | 분석 화면 공통 UI | 분석 레이아웃·탭·범용 데이터 표 |
 | `components/workflow/` | 월간 발주 업무 단계 UI | 현황, 수요, 공급, 마스터, 계산, 보고 화면 |
 | `lib/` | 도메인 모델·데이터 접근·Supabase 연결 | 타입/정규화, 조회, 클라이언트 생성 |
 | `lib/supabase/` | Supabase 연결 구현 | 환경변수, 브라우저 클라이언트, 서버 클라이언트 |
@@ -123,6 +125,12 @@ app/analysis/leadtime/page.tsx
      -> lib/supabase.ts
         -> lib/supabase/server.ts
         -> lib/supabase/env.ts
+     -> lib/scm-model.ts
+
+app/analysis/stockout/page.tsx
+  -> components/analysis/*.tsx
+  -> lib/scm.ts
+     -> lib/supabase/server.ts
      -> lib/scm-model.ts
 
 app/api/health/supabase/route.ts
@@ -167,6 +175,16 @@ app/api/health/supabase/route.ts
 - 컬럼 정의는 `DataTable`에 전달하고, 상세 표 표현은 공통 컴포넌트에 맡긴다.
 - 화면에서 수행하는 계산은 표시용 집계·색상 판정이며, 리드타임 통계 자체는 DB 뷰가 제공한다.
 
+### `app/analysis/stockout/page.tsx`
+
+- `/analysis/stockout` 서버 페이지다.
+- `getStockoutRisk()`와 `getStockoutKpi()`를 병렬 호출한다.
+- 전체 품목, 위험 품목, 30일 이내 소진, 계산 불가 품목 KPI를 표시한다.
+- 품목코드·품목명·공급처·가용수량·일평균 사용량·계획 리드타임·소진일수·소진예정일·상태를 표로 표시한다.
+- `SAFE`, `CRITICAL`, `UNKNOWN` 상태를 한국어 배지로 변환한다.
+- 사용량이나 리드타임이 없는 행은 `null`과 계산 불가 상태를 그대로 표시한다.
+- SQL 뷰가 계산한 위험상태와 KPI를 사용하며 화면에서 소진일수나 위험판정을 재계산하지 않는다.
+
 ### `app/api/health/supabase/route.ts`
 
 - `GET /api/health/supabase`를 제공하는 Route Handler다.
@@ -193,6 +211,13 @@ app/api/health/supabase/route.ts
 - 분석 라우트의 공통 외곽 레이아웃이다.
 - 분석 라벨, 제목, 설명, `SUPABASE LIVE` 배지를 출력한다.
 - 실제 데이터 조회나 분석 계산은 하지 않는다.
+
+### `components/analysis/analysis-tabs.tsx`
+
+- `/analysis/*` 화면 사이를 이동하는 클라이언트 탭 내비게이션이다.
+- 현재 리드타임 격차와 재고 소진 위험 링크를 제공한다.
+- `usePathname`으로 현재 경로를 활성 탭으로 표시한다.
+- 새 분석 화면을 만들 때 `tabs` 목록에 경로와 라벨을 추가한다.
 
 ### `components/analysis/data-table.tsx`
 
@@ -265,16 +290,19 @@ app/api/health/supabase/route.ts
 
 - 분석 도메인 타입과 외부 행 데이터 정규화를 담당한다.
 - `LeadtimeGap`은 공급처, 국가, 마스터 리드타임, 표본 수, 실적 평균, P80, 격차를 화면 표준 형태로 표현한다.
+- `StockoutRisk`와 `StockoutKpi`는 소진위험 목록·요약 화면의 표준 타입이다.
 - `value`는 후보 컬럼명을 순서대로 검색해 첫 유효값을 반환한다.
 - `numberValue`는 숫자 변환 실패나 비유한 값을 `null`로 처리한다.
 - `normalizeLeadtimeGap`은 영어·한국어·별칭 컬럼명을 표준 필드로 바꾼다.
+- `normalizeStockoutRisk`와 `normalizeStockoutKpi`는 analytics 뷰의 영어·한국어 별칭과 계산 불가 값을 정규화한다.
 - 뷰 컬럼명이 바뀌어도 화면이 깨지지 않게 하는 경계 계층이다.
 
 ### `lib/scm.ts`
 
 - 화면에서 사용할 SCM 조회 함수를 모은다.
 - `getLeadtimeGap`은 서버 Supabase 클라이언트로 `analytics.v_leadtime_gap`을 조회하고 각 행을 정규화한다.
-- `getStockoutKpi`는 `analytics.v_stockout_kpi`에서 요약 한 건을 조회하도록 준비되어 있다.
+- `getStockoutRisk`는 `analytics.v_stockout_risk`의 품목별 행을 조회하고 `normalizeStockoutRisk`로 변환한다.
+- `getStockoutKpi`는 `analytics.v_stockout_kpi`의 한 행을 `normalizeStockoutKpi`로 변환한다.
 - 조회 실패 시 `{ rows/data: 빈 값, error: 메시지 }` 형태로 반환해 화면이 오류와 빈 결과를 구분할 수 있게 한다.
 - 계산식이나 화면 마크업은 포함하지 않는다.
 
@@ -439,7 +467,7 @@ planning_runs
 - 실제 발주량 계산 서비스가 없다.
 - 수동 조정 이력, Excel/CSV 업로드 저장, Excel/PDF 다운로드가 없다.
 - 인증·권한·다중 사용자 기능이 없다.
-- `getStockoutKpi`는 준비되어 있지만 이를 사용하는 라우트가 없다.
+- `getStockoutKpi`와 `getStockoutRisk`는 `/analysis/stockout`에서 사용한다.
 - 현재 마이그레이션의 수요확정 테이블과 `analytics` 분석 뷰의 연결 계약이 문서 수준에서만 존재한다.
 
 ### 구현 시 지켜야 할 경계

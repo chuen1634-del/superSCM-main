@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { normalizeLeadtimeGap } from './scm-model.ts';
+import { normalizeLeadtimeGap, normalizeStockoutKpi, normalizeStockoutRisk } from './scm-model.ts';
 
 test('normalizes analytics leadtime rows into the screen model', () => {
   const result = normalizeLeadtimeGap({
@@ -51,5 +51,83 @@ test('reads the real analytics.v_leadtime_gap column names', () => {
     actualAverage: 28.4,
     p80: 33,
     gap: 8,
+  });
+});
+
+test('normalizes analytics stockout risk rows into the screen model', () => {
+  const result = normalizeStockoutRisk({
+    item_id: 'ITEM012',
+    item_name: '토너 카트리지',
+    supplier_id: 'SUP003',
+    current_stock: 723,
+    inbound_qty: 361,
+    available_qty: 1084,
+    daily_usage_avg: 60.22,
+    cv: 0.18,
+    planned_lead_time: 18,
+    stockout_days: 18.0,
+    stockout_date: '2026-09-14',
+    risk_status: 'CRITICAL',
+    reason: null,
+  });
+
+  assert.deepEqual(result, {
+    itemId: 'ITEM012',
+    itemName: '토너 카트리지',
+    supplierId: 'SUP003',
+    currentStock: 723,
+    inboundQty: 361,
+    availableQty: 1084,
+    dailyUsageAvg: 60.22,
+    cv: 0.18,
+    plannedLeadTime: 18,
+    stockoutDays: 18,
+    stockoutDate: '2026-09-14',
+    riskStatus: 'CRITICAL',
+    reason: null,
+  });
+});
+
+test('keeps missing stockout inputs as null with an explicit reason', () => {
+  const result = normalizeStockoutRisk({
+    품목코드: 'ITEM020',
+    품목명: '사용 이력 없음',
+    생산법인: 'SUP010',
+    현재고: '40',
+    입고예정: '0',
+    가용수량: '40',
+    일평균사용량: null,
+    계획리드타임: '22',
+    소진일수: null,
+    소진예정일: null,
+    위험상태: 'UNKNOWN',
+    사유: 'NO_USAGE',
+  });
+
+  assert.equal(result.itemId, 'ITEM020');
+  assert.equal(result.availableQty, 40);
+  assert.equal(result.stockoutDays, null);
+  assert.equal(result.stockoutDate, null);
+  assert.equal(result.riskStatus, 'UNKNOWN');
+  assert.equal(result.reason, 'NO_USAGE');
+});
+
+test('normalizes stockout KPI values without replacing an unavailable average', () => {
+  const result = normalizeStockoutKpi({
+    n_items: 20,
+    n_critical: 4,
+    n_safe: 14,
+    n_unknown: 2,
+    n_within_30d: 5,
+    avg_stockout_days: null,
+  });
+
+  assert.deepEqual(result, {
+    nItems: 20,
+    nCritical: 4,
+    nSafe: 14,
+    nUnknown: 2,
+    nWithin30d: 5,
+    avgStockoutDays: null,
   });
 });
