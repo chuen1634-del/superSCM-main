@@ -51,6 +51,8 @@
 .scm-insight-banner { padding: var(--space-4); border: 1px solid var(--action-line); border-radius: var(--radius-md); background: var(--action-subtle); color: var(--action-strong); }
 .scm-insight-banner__title { margin-bottom: var(--space-1); font-weight: 800; }
 .scm-empty-value { color: var(--muted); font-variant-numeric: tabular-nums; }
+.user-row-form { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2); }
+.user-active { display: inline-flex; align-items: center; gap: var(--space-1); color: var(--muted-strong); font-size: var(--text-xs); }
 
 @media (max-width: 760px) {
   .scm-page-header { display: block; }

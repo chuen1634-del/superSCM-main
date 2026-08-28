@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { MenuItem } from '@/lib/menu';
 
-const iconByName: Record<string, string> = { dashboard: '▦', timeline: '⌁', inventory: '▤', settings: '⚙', workflow: '↗' };
+const iconByName: Record<string, string> = { dashboard: '▦', demand: '◒', supply: '▤', master: '◇', calculation: '⌁', report: '▧', timeline: '⌁', inventory: '▤', settings: '⚙', workflow: '↗', users: '♙' };
 
 export default function Sidebar({ menu, title = '월간 발주계획', subtitle = 'Procurement Planning' }: { menu: MenuItem[]; title?: string; subtitle?: string }) {
   const pathname = usePathname();
