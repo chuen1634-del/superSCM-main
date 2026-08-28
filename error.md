@@ -55,3 +55,81 @@
 - 증상: 마지막 Git 상태 확인 명령을 실행하기 전 도구 입력의 JavaScript 객체 문법 오류가 발생함.
 - 원인: `max_output_tokens` 속성의 콜론을 잘못 작성함.
 - 해결: 명령 자체는 변경하지 않고 올바른 도구 입력 형식으로 다시 실행함.
+
+## 2026-08-28 — STEP 4 RED 테스트의 미구현 모듈 import 오류
+
+- 증상: `lib/import/types.test.ts` 실행 시 `Cannot find module .../lib/import/schema`가 발생함.
+- 원인: TDD RED 단계에서 아직 생성하지 않은 `lib/import/schema.ts`를 테스트가 import함.
+- 해결: 실패 원인을 확인한 뒤 테스트가 요구하는 타입·스키마 모듈을 구현해 GREEN 단계로 진행함.
+
+## 2026-08-28 — STEP 4 validation RED 테스트의 미구현 모듈 import 오류
+
+- 증상: `lib/import/validate.test.ts` 실행 시 `Cannot find module .../lib/import/validate.ts`가 발생함.
+- 원인: validation 구현 전 RED 단계에서 테스트가 아직 존재하지 않는 모듈을 import함.
+- 해결: 실패 원인을 확인한 뒤 `validateRows` 공통 검증 모듈을 구현함.
+
+## 2026-08-28 — STEP 4 parse RED 테스트의 미구현 모듈 import 오류
+
+- 증상: `lib/import/parse.test.ts` 실행 시 `Cannot find module .../lib/import/parse.ts`가 발생함.
+- 원인: CSV/XLSX 파서 구현 전 RED 단계에서 테스트가 아직 존재하지 않는 모듈을 import함.
+- 해결: 실패 원인을 확인한 뒤 `parseFile` 서버 파서를 구현함.
+
+## 2026-08-28 — STEP 4 UI 모델 테스트 도구 경로 입력 오류
+
+- 증상: UI 모델 RED 테스트를 실행하기 전 도구 입력에서 `Unexpected identifier`가 발생함.
+- 원인: worktree 경로 문자열을 도구 호출 JavaScript 객체에 잘못 입력함.
+- 해결: 파일과 구현에는 변경이 없음을 확인하고 올바른 worktree 경로로 테스트를 다시 실행함.
+
+## 2026-08-28 — STEP 4 UI 모델 RED 테스트의 미구현 모듈 import 오류
+
+- 증상: `lib/import/ui-model.test.ts` 실행 시 `Cannot find module .../lib/import/ui-model.ts`가 발생함.
+- 원인: wizard 상태 구현 전 RED 단계에서 테스트가 아직 존재하지 않는 모듈을 import함.
+- 해결: 실패 원인을 확인한 뒤 wizard 상태 계산 모듈을 구현함.
+
+## 2026-08-28 — STEP 4 UI 모델 재검증 도구 입력 오류
+
+- 증상: UI 모델 수정 후 재검증 명령을 실행하기 전 도구 입력에서 JavaScript 문자열 오류가 발생함.
+- 원인: worktree 경로가 포함된 도구 호출 문자열을 잘못 작성함.
+- 해결: 코드 변경 없이 올바른 worktree 경로로 재검증함.
+
+## 2026-08-28 — STEP 4 빌드 polling 세션 ID 누락
+
+- 증상: 실행 중인 빌드 세션을 polling하는 도구 호출에서 `ReferenceError: Cannot access 'r' before initialization`이 발생함.
+- 원인: 이전 실행 결과의 세션 ID를 저장하지 않고 다음 polling 호출에서 초기화 중인 변수를 참조함.
+- 해결: 빌드 프로세스의 실패로 판단하지 않고 빌드를 새로 실행해 종료 코드까지 확인함.
+
+## 2026-08-28 — STEP 4 ValidationIssue severity 타입 오류
+
+- 증상: Next.js build에서 `ValidationSeverity`의 `SUCCESS`가 오류 목록의 `WARNING/ERROR` 타입에 할당될 수 없다는 TypeScript 오류가 발생함.
+- 원인: 행 전체 상태와 오류 기록의 severity 타입을 하나로 사용함.
+- 해결: 오류 기록 전용 `IssueSeverity`를 `WARNING/ERROR`로 분리하고 행 상태에는 기존 `ValidationSeverity`를 유지함.
+
+## 2026-08-28 — STEP 4 CSV parser callback implicit any
+
+- 증상: Next.js build에서 `parse.ts` CSV `error` 콜백 매개변수가 암시적 `any`라는 TypeScript 오류가 발생함.
+- 원인: Papa Parse 콜백의 오류 매개변수 타입이 객체 문맥에서 추론되지 않음.
+- 해결: 콜백 매개변수에 `Error` 타입을 명시함.
+
+## 2026-08-28 — STEP 4 repository auth context destructuring 타입 오류
+
+- 증상: Next.js build에서 `authUser`가 `adminClient()` 반환값에 직접 존재하지 않는다는 TypeScript 오류가 발생함.
+- 원인: `adminClient()`이 `{ context: { authUser, profile }, supabase }` 구조를 반환하는데 중첩 객체를 직접 구조분해함.
+- 해결: `context`를 먼저 구조분해한 뒤 `context.authUser`를 사용하도록 수정함.
+
+## 2026-08-28 — STEP 4 repository context 변수 중복 선언
+
+- 증상: Next.js build에서 `Identifier 'context' has already been declared`가 발생함.
+- 원인: 인증 context와 validation context에 같은 지역 변수명을 사용함.
+- 해결: 인증 값은 `authContext`, 검증 값은 `validationContext`로 이름을 분리함.
+
+## 2026-08-28 — worktree의 `.env.local` 누락
+
+- 증상: worktree에서 Next.js build가 Supabase 환경변수 누락 오류로 페이지 생성에 실패함.
+- 원인: Git worktree에는 Git에서 추적하지 않는 루트 `.env.local`이 자동 복사되지 않음.
+- 해결: 루트의 로컬 `.env.local`을 격리 worktree에 복사해 빌드 검증 환경을 맞춤. 해당 파일은 `.gitignore` 대상이라 커밋하지 않음.
+
+## 2026-08-28 — worktree 상위 경로 지정 오류
+
+- 증상: `.env.local` 복사 시 `Cannot find path '..\\.env.local'`가 발생함.
+- 원인: worktree는 `.worktrees\\step4-data-import` 아래에 있어 프로젝트 루트가 두 단계 상위인데 한 단계만 이동함.
+- 해결: 프로젝트 루트의 `..\\..\\.env.local`을 대상으로 다시 복사함.
