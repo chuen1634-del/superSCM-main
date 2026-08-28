@@ -21,6 +21,7 @@ export const userMenu: MenuItem[] = [
 export const adminMenu: MenuItem[] = [
   { href: '/admin', label: '관리자 현황', description: '시스템 운영 현황', icon: 'settings' },
   { href: '/admin/users', label: '사용자 관리', description: '사용자 role과 활성 상태', icon: 'users' },
+  { href: '/admin/forecast-settings', label: 'Forecast 설정', description: '학습·검증 기간과 정책', icon: 'forecast' },
   { href: '/legacy/workflow', label: '기존 업무 화면', description: '레거시 workflow', icon: 'workflow' },
 ];
 

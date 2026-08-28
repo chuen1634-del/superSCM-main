@@ -25,3 +25,27 @@
 - 원인: `app/(admin)/admin/users/page.tsx`에서 같은 route group 내부의 구현 페이지까지 올라가는 상대경로 단계가 하나 많았음.
 - 해결: re-export 경로를 `../../users/page`로 수정해 기존 사용자 관리 구현을 `/admin/users`에서 사용하도록 함.
 - 추가 조치: 기존 구현 페이지가 삭제되어 re-export 대상이 없었으므로 `/admin/users/page.tsx`에 실제 페이지를 생성하고 action/form만 재사용함.
+
+## 2026-08-28 — PowerShell 괄호 경로 해석 오류
+
+- 증상: `Get-ChildItem app\(admin)\...` 실행 시 `admin`을 명령으로 해석해 파일 목록 조회가 실패함.
+- 원인: PowerShell에서 괄호가 포함된 경로를 따옴표 없이 입력함.
+- 해결: route group 경로를 `'app/(admin)/...'`처럼 따옴표로 감싸거나 `-LiteralPath`를 사용함.
+
+## 2026-08-28 — 존재하지 않는 public.planning_runs에 RLS 정책 생성
+
+- 증상: `ERROR: 42P01: relation "public.planning_runs" does not exist`가 `drop policy ... on public.planning_runs`에서 발생함.
+- 원인: `alter table if exists`는 없는 테이블을 건너뛰지만, 이후 PL/pgSQL 반복문에서 `drop policy`와 `create policy`를 무조건 실행함.
+- 해결: 실제 존재하는 테이블만 대상으로 반복문을 실행하도록 `to_regclass(format('public.%I', table_name)) is not null` 조건을 추가하거나, 해당 프로젝트에 없는 테이블 이름을 배열에서 제거함.
+
+## 2026-08-28 — SQL 예시의 줄임표 실행
+
+- 증상: `syntax error at or near ".."`가 `alter table ...` 줄에서 발생함.
+- 원인: 설명용 자리표시자 `...`를 실제 SQL로 실행함.
+- 해결: `public` 테이블이 없는 환경에서는 해당 레거시 구간 전체를 실행하지 않고, 실제 존재하는 스키마의 SQL만 실행함.
+
+## 2026-08-28 — PowerShell npm.ps1 실행 정책 차단
+
+- 증상: `npm run dev` 실행 시 `이 시스템에서 스크립트를 실행할 수 없으므로 npm.ps1 파일을 로드할 수 없습니다`가 발생함.
+- 원인: PowerShell 실행 정책이 `npm.ps1` 스크립트 실행을 차단함.
+- 해결: 시스템 정책을 변경하지 않고 `npm.cmd run dev`를 사용하거나, 현재 터미널에만 임시로 `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass`를 적용함.
