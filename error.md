@@ -169,3 +169,21 @@
 - 증상: `lib/forecast-engine-model.test.ts` 실행 시 `Cannot find module .../lib/forecast-engine-model.ts`가 발생함.
 - 원인: Forecast 화면 모델을 구현하기 전에 TDD 테스트가 해당 모듈을 import함.
 - 해결: RED 결과를 확인한 후 Forecast run 정규화, stale 판정, 계산 불가 표시 함수를 구현함.
+
+## 2026-08-28 — SQL Editor에서 Forecast 실행 시 관리자 권한 오류
+
+- 증상: `select core.run_baseline_forecast(...)` 실행 시 `42501: 관리자 권한이 필요합니다.`가 발생함.
+- 원인: Supabase SQL Editor는 애플리케이션 로그인 세션의 JWT가 없으므로 `auth.uid()`가 null이고, `core.is_admin()`이 false를 반환함.
+- 해결: RLS와 ADMIN 검사를 우회하지 않고, ADMIN으로 로그인한 `/admin/forecast-runs` 화면의 Server Action에서 RPC를 실행함. SQL Editor에서는 결과 조회와 검증 쿼리만 실행함.
+
+## 2026-08-28 — 로컬 관리자 화면 Forbidden
+
+- 증상: 로컬 `/admin/forecast-runs` 접근 시 `Forbidden` 응답이 표시됨.
+- 원인: `middleware`가 로그인 사용자의 `core.app_user.role`이 `ADMIN`이고 `active`가 true인지 서버에서 확인하는데, 동시에 main/worktree 개발 서버가 실행 중이면 잘못된 환경에 접근할 수 있음.
+- 해결: 두 개발 서버를 종료하고 STEP 6 worktree 서버 하나만 실행한 뒤, 로그인 계정의 `core.app_user` role/active를 확인함. 권한 검사를 제거하거나 클라이언트에서만 판단하지 않음.
+
+## 2026-08-28 — 로컬 화면에 로그아웃 버튼 미표시
+
+- 증상: `localhost:3001` 로그인 후 공통 화면에 로그아웃 버튼이 보이지 않음.
+- 원인: 로그아웃 Server Action은 존재했지만 공통 `Topbar`에 form으로 연결되어 있지 않았음.
+- 해결: Topbar에 `logoutAction`을 연결한 서버 form 버튼을 추가해 USER/ADMIN 화면에서 공통으로 사용하도록 수정함.
