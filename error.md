@@ -211,3 +211,8 @@
 - 증상: 로그인 후 `/admin/users`에 접근하면 `Forbidden`이 표시됨.
 - 원인: middleware와 `requireAdmin()`이 로그인한 Auth 사용자와 `core.app_user.user_id`가 일치하는 행의 `role = 'ADMIN'`, `active = true`를 모두 요구함. 이메일만 변경했거나 새 Auth 사용자를 생성한 경우 해당 profile이 `USER`이거나 기존 profile과 user_id가 달라질 수 있음.
 - 해결: Supabase Auth에 로그인한 계정의 user id와 `core.app_user`를 대조하고, 관리자 계정에만 `ADMIN`/`true`를 설정한다. 권한 검사를 제거하거나 클라이언트에서만 처리하지 않는다.
+## 2026-08-28 — Vercel 빌드의 Forecast 호환 경로 환경변수 오류
+
+- 증상: Vercel `next build`에서 `/admin/forecast-run` prerender 중 `NEXT_PUBLIC_SUPABASE_URL` 및 `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` 누락 오류가 발생함.
+- 원인: 관리자 레이아웃의 인증 검사가 단수형 redirect 호환 페이지의 빌드 시점 prerender에서도 실행됨. Vercel 프로젝트 환경변수 미설정 상태에서 정적 생성이 진행됨.
+- 해결: 호환 페이지에 `dynamic = 'force-dynamic'`을 지정해 빌드 시 인증을 실행하지 않도록 함. 배포 환경에는 Supabase 환경변수를 별도로 설정해야 한다.

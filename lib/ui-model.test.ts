@@ -48,3 +48,8 @@ test('주요 route group 페이지가 존재한다', () => {
     assert.equal(existsSync(file), true, file);
   }
 });
+
+test('관리자 Forecast 호환 경로는 빌드 시 정적으로 렌더링하지 않는다', () => {
+  const source = readFileSync('app/(admin)/admin/forecast-run/page.tsx', 'utf8');
+  assert.match(source, /export const dynamic = 'force-dynamic'/);
+});
