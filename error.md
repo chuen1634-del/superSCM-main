@@ -187,3 +187,27 @@
 - 증상: `localhost:3001` 로그인 후 공통 화면에 로그아웃 버튼이 보이지 않음.
 - 원인: 로그아웃 Server Action은 존재했지만 공통 `Topbar`에 form으로 연결되어 있지 않았음.
 - 해결: Topbar에 `logoutAction`을 연결한 서버 form 버튼을 추가해 USER/ADMIN 화면에서 공통으로 사용하도록 수정함.
+
+## 2026-08-28 — localhost:3001 화면이 기본 브라우저 스타일로 표시됨
+
+- 증상: 페이지 HTML은 열리지만 사이드바, 카드, 버튼 등의 CSS가 적용되지 않고 기본 링크/텍스트로 표시됨.
+- 원인: worktree 개발 서버가 HTML에서 참조한 `/_next/static/css/app/layout.css` 요청에 404를 반환함. 빌드 산출물에는 CSS가 정상 생성되어 있어 애플리케이션 CSS 파일 삭제나 CSS 문법 오류가 아니라 개발 서버의 stale 상태로 확인됨.
+- 해결: worktree의 개발 서버를 종료 후 재시작하고, CSS 요청이 200으로 응답하는지 확인한다. 다른 main 서버는 종료하지 않는다.
+
+## 2026-08-28 — 관리자 Forecast 실행 단수 경로 404
+
+- 증상: `/admin/forecast-run`으로 접근하면 404가 표시됨.
+- 원인: 실제 페이지 라우트는 `/admin/forecast-runs`(복수형)인데 단수형 호환 라우트가 없었음.
+- 해결: 단수형 `/admin/forecast-run`을 복수형 `/admin/forecast-runs`로 redirect하는 호환 페이지를 추가함. 메뉴의 정식 경로는 복수형을 유지함.
+
+## 2026-08-28 — 개발 서버 재시작 후 CSS 404 재발
+
+- 증상: `localhost:3001/admin/forecast-runs`에서 다시 기본 브라우저 스타일만 표시됨.
+- 원인: 개발 서버 실행 중 `npm run build`가 동일한 `.next` 디렉터리를 다시 생성해, 실행 중인 dev 서버가 참조하던 CSS 가상 경로와 산출물이 불일치함.
+- 해결: worktree dev 서버만 종료 후 재시작함. 재시작 후 `/_next/static/css/app/layout.css`가 200으로 응답하는 것을 확인함. 개발 서버 실행 중에는 별도 터미널에서 build를 실행하지 않는다.
+
+## 2026-08-28 — `/admin/users` Forbidden
+
+- 증상: 로그인 후 `/admin/users`에 접근하면 `Forbidden`이 표시됨.
+- 원인: middleware와 `requireAdmin()`이 로그인한 Auth 사용자와 `core.app_user.user_id`가 일치하는 행의 `role = 'ADMIN'`, `active = true`를 모두 요구함. 이메일만 변경했거나 새 Auth 사용자를 생성한 경우 해당 profile이 `USER`이거나 기존 profile과 user_id가 달라질 수 있음.
+- 해결: Supabase Auth에 로그인한 계정의 user id와 `core.app_user`를 대조하고, 관리자 계정에만 `ADMIN`/`true`를 설정한다. 권한 검사를 제거하거나 클라이언트에서만 처리하지 않는다.

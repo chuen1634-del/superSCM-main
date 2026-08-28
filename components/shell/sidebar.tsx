@@ -17,7 +17,7 @@ export default function Sidebar({ menu, title = '월간 발주계획', subtitle 
       <div className="scm-sidebar__nav-label">MENU</div>
       <nav className="scm-sidebar__nav" aria-label="주요 메뉴">
         {menu.map((item) => (
-          <Link key={item.href} href={item.href} className="scm-nav-link" aria-current={pathname === item.href ? 'page' : undefined}>
+          <Link key={`${item.href}-${item.label}`} href={item.href} className="scm-nav-link" aria-current={pathname === item.href ? 'page' : undefined}>
             <span className="scm-nav-link__icon" aria-hidden="true">{iconByName[item.icon ?? ''] ?? '•'}</span>
             <span>{item.label}</span>
           </Link>
