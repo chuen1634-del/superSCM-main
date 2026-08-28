@@ -216,3 +216,15 @@
 - 증상: Vercel `next build`에서 `/admin/forecast-run` prerender 중 `NEXT_PUBLIC_SUPABASE_URL` 및 `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` 누락 오류가 발생함.
 - 원인: 관리자 레이아웃의 인증 검사가 단수형 redirect 호환 페이지의 빌드 시점 prerender에서도 실행됨. Vercel 프로젝트 환경변수 미설정 상태에서 정적 생성이 진행됨.
 - 해결: 호환 페이지에 `dynamic = 'force-dynamic'`을 지정해 빌드 시 인증을 실행하지 않도록 함. 배포 환경에는 Supabase 환경변수를 별도로 설정해야 한다.
+
+## 2026-08-28 — 관리자 계정이 사용자 화면으로 이동하면 관리자 메뉴가 사라짐
+
+- 증상: ADMIN으로 로그인한 뒤 사용자 메뉴를 클릭하면 사용자 메뉴만 남고 관리자 메뉴가 사라짐.
+- 원인: `/admin/*`은 관리자 레이아웃에서 `getMenuForRole('ADMIN')`을 사용하지만, `/`, `/workflow`, `/analysis/*`는 사용자 레이아웃에서 `userMenu`만 사용하고 있었음.
+- 해결: 사용자 레이아웃도 `requireUser()`가 반환한 서버 profile role을 기준으로 `getMenuForRole(profile.role)`을 사용하도록 수정함. 메뉴 표시와 별개로 `/admin/*`의 서버 및 middleware 권한 검사는 유지한다.
+
+## 2026-08-28 — Next.js `Cannot find module './331.js'`
+
+- 증상: `.next/server/webpack-runtime.js`가 존재하지 않는 청크 `331.js`를 참조하며 관리자 페이지 실행/빌드가 실패함.
+- 원인: 개발 서버와 production build가 같은 worktree의 `.next` 산출물을 동시에 사용해 청크 manifest와 실제 파일이 불일치함.
+- 해결: worktree dev 서버를 종료한 뒤 `npm.cmd run build`로 `.next`를 재생성하고, build 종료 후 dev 서버를 다시 시작함. 소스 코드나 DB는 변경하지 않음.

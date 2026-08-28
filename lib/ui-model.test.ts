@@ -30,6 +30,11 @@ test('관리자 레이아웃은 ADMIN 통합 메뉴를 Sidebar에 전달한다',
   assert.match(source, /getMenuForRole\('ADMIN'\)/);
 });
 
+test('USER 레이아웃은 로그인 role에 맞는 메뉴를 Sidebar에 전달한다', () => {
+  const source = readFileSync('app/(user)/layout.tsx', 'utf8');
+  assert.match(source, /getMenuForRole\(profile\.role\)/);
+});
+
 test('Sidebar 메뉴 key는 동일한 href를 구분한다', () => {
   const source = readFileSync('components/shell/sidebar.tsx', 'utf8');
   assert.match(source, /key=\{`\$\{item\.href\}-\$\{item\.label\}`\}/);
