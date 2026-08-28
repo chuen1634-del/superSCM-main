@@ -49,3 +49,9 @@
 - 증상: `npm run dev` 실행 시 `이 시스템에서 스크립트를 실행할 수 없으므로 npm.ps1 파일을 로드할 수 없습니다`가 발생함.
 - 원인: PowerShell 실행 정책이 `npm.ps1` 스크립트 실행을 차단함.
 - 해결: 시스템 정책을 변경하지 않고 `npm.cmd run dev`를 사용하거나, 현재 터미널에만 임시로 `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass`를 적용함.
+
+## 2026-08-28 — 상태 확인 도구 입력 문법 오류
+
+- 증상: 마지막 Git 상태 확인 명령을 실행하기 전 도구 입력의 JavaScript 객체 문법 오류가 발생함.
+- 원인: `max_output_tokens` 속성의 콜론을 잘못 작성함.
+- 해결: 명령 자체는 변경하지 않고 올바른 도구 입력 형식으로 다시 실행함.
