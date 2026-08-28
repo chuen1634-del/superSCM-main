@@ -16,6 +16,7 @@ export const userMenu: MenuItem[] = [
   { href: '/workflow', label: '보고자료', description: '발주계획 보고자료 확인', icon: 'report' },
   { href: '/analysis/leadtime', label: '리드타임 분석', description: '공급처별 리드타임 격차', icon: 'timeline' },
   { href: '/analysis/stockout', label: '소진위험 분석', description: '품목별 재고 소진 위험', icon: 'inventory' },
+  { href: '/analysis/demand-profile', label: '수요 프로파일', description: 'SKU별 수요 패턴 분류', icon: 'demand' },
 ];
 
 export const adminMenu: MenuItem[] = [

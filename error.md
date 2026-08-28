@@ -133,3 +133,15 @@
 - 증상: `.env.local` 복사 시 `Cannot find path '..\\.env.local'`가 발생함.
 - 원인: worktree는 `.worktrees\\step4-data-import` 아래에 있어 프로젝트 루트가 두 단계 상위인데 한 단계만 이동함.
 - 해결: 프로젝트 루트의 `..\\..\\.env.local`을 대상으로 다시 복사함.
+
+## 2026-08-28 — STEP 5 Demand Profile RED 테스트의 미구현 모델 import 오류
+
+- 증상: `lib/demand-profile-model.test.ts` 실행 시 `Cannot find module .../lib/demand-profile-model.ts`가 발생함.
+- 원인: TDD RED 단계에서 Demand Profile 정규화 모델을 구현하기 전에 테스트가 해당 모듈을 import함.
+- 해결: 실패가 새 기능의 미구현 때문임을 확인한 뒤 `demand-profile-model.ts`에 코드값, null/reason 보존, 저장 결과 필터 함수를 구현함.
+
+## 2026-08-28 — STEP 5 정적 참조 검색 PowerShell 따옴표 오류
+
+- 증상: raw 직접 조회 여부를 확인하는 `rg` 명령 실행 시 PowerShell `ParserError`가 발생함.
+- 원인: 정규식 안의 따옴표와 괄호를 PowerShell 문자열에서 잘못 이스케이프함.
+- 해결: 코드에는 변경이 없음을 확인하고, 단순한 문자열 검색 명령으로 검증을 다시 수행함.

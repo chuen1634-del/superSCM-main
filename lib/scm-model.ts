@@ -36,6 +36,39 @@ export type StockoutKpi = {
   avgStockoutDays: number | null;
 };
 
+export type DemandType = 'SMOOTH' | 'INTERMITTENT' | 'ERRATIC' | 'LUMPY';
+
+export type DemandProfile = {
+  itemId: string;
+  itemName: string;
+  nPeriods: number;
+  nNonzeroPeriods: number;
+  adi: number | null;
+  cv: number | null;
+  cvSquared: number | null;
+  zeroDemandRate: number | null;
+  trend: number | null;
+  recentChangeRate: number | null;
+  peakPeriod: string | null;
+  demandType: DemandType | null;
+  seasonality: string | null;
+  reasonCode: string | null;
+  stability: string | null;
+};
+
+export type DemandProfileKpi = {
+  totalItems: number;
+  nSmooth: number;
+  nIntermittent: number;
+  nErratic: number;
+  nLumpy: number;
+  nCrostonNeeded: number;
+  nCalculationUnavailable: number;
+};
+
+export type DemandAvailability = 'ALL' | 'AVAILABLE' | 'UNAVAILABLE';
+export type DemandProfileFilter = { demandType: DemandType | 'ALL'; availability: DemandAvailability; search: string };
+
 function value(row: Record<string, unknown>, keys: string[]) {
   for (const key of keys) {
     if (row[key] !== undefined && row[key] !== null && row[key] !== '') return row[key];
@@ -103,4 +136,58 @@ export function normalizeStockoutKpi(row: Record<string, unknown>): StockoutKpi 
     nWithin30d: numberValue(row, ['n_within_30d', 'within_30_days', '30일이내소진']) ?? 0,
     avgStockoutDays: numberValue(row, ['avg_stockout_days', 'average_stockout_days', '평균소진일수']),
   };
+}
+
+function demandTypeValue(valueToCheck: unknown): DemandType | null {
+  return valueToCheck === 'SMOOTH' || valueToCheck === 'INTERMITTENT' || valueToCheck === 'ERRATIC' || valueToCheck === 'LUMPY'
+    ? valueToCheck
+    : null;
+}
+
+export function normalizeDemandProfile(row: Record<string, unknown>): DemandProfile {
+  return {
+    itemId: stringValue(row, ['item_id', 'item_code', '품목코드'], '미정'),
+    itemName: stringValue(row, ['item_name', '품목명'], '미정'),
+    nPeriods: numberValue(row, ['n_periods', 'period_count']) ?? 0,
+    nNonzeroPeriods: numberValue(row, ['n_nonzero_periods', 'nonzero_period_count']) ?? 0,
+    adi: numberValue(row, ['adi']),
+    cv: numberValue(row, ['cv']),
+    cvSquared: numberValue(row, ['cv_squared', 'cv2']),
+    zeroDemandRate: numberValue(row, ['zero_demand_rate']),
+    trend: numberValue(row, ['trend', 'trend_per_period']),
+    recentChangeRate: numberValue(row, ['recent_change_rate', 'recent_change_rate_pct']),
+    peakPeriod: value(row, ['peak_period', 'peak_month']) === null ? null : String(value(row, ['peak_period', 'peak_month'])),
+    demandType: demandTypeValue(value(row, ['demand_type'])),
+    seasonality: value(row, ['seasonality']) === null ? null : String(value(row, ['seasonality'])),
+    reasonCode: value(row, ['reason_code', 'reason']) === null ? null : String(value(row, ['reason_code', 'reason'])),
+    stability: value(row, ['stability']) === null ? null : String(value(row, ['stability'])),
+  };
+}
+
+export function normalizeDemandProfileKpi(row: Record<string, unknown>): DemandProfileKpi {
+  return {
+    totalItems: numberValue(row, ['total_items']) ?? 0,
+    nSmooth: numberValue(row, ['n_smooth']) ?? 0,
+    nIntermittent: numberValue(row, ['n_intermittent']) ?? 0,
+    nErratic: numberValue(row, ['n_erratic']) ?? 0,
+    nLumpy: numberValue(row, ['n_lumpy']) ?? 0,
+    nCrostonNeeded: numberValue(row, ['n_croston_needed']) ?? 0,
+    nCalculationUnavailable: numberValue(row, ['n_calculation_unavailable']) ?? 0,
+  };
+}
+
+export function demandTypeLabel(type: DemandType): string {
+  return type;
+}
+
+export function filterDemandProfiles(rows: DemandProfile[], filter: DemandProfileFilter): DemandProfile[] {
+  const search = filter.search.trim().toUpperCase();
+  return rows.filter((row) => {
+    const matchesType = filter.demandType === 'ALL' || row.demandType === filter.demandType;
+    const available = row.reasonCode === null;
+    const matchesAvailability = filter.availability === 'ALL'
+      || (filter.availability === 'AVAILABLE' ? available : !available);
+    const matchesSearch = !search || row.itemId.toUpperCase().includes(search) || row.itemName.toUpperCase().includes(search);
+    return matchesType && matchesAvailability && matchesSearch;
+  });
 }
