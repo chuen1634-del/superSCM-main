@@ -145,3 +145,9 @@
 - 증상: raw 직접 조회 여부를 확인하는 `rg` 명령 실행 시 PowerShell `ParserError`가 발생함.
 - 원인: 정규식 안의 따옴표와 괄호를 PowerShell 문자열에서 잘못 이스케이프함.
 - 해결: 코드에는 변경이 없음을 확인하고, 단순한 문자열 검색 명령으로 검증을 다시 수행함.
+
+## 2026-08-28 — STEP 5 Demand Profile SQL의 round 타입 오류
+
+- 증상: `round(double precision, integer) does not exist`가 `round(trend_per_period, 4)`에서 발생함.
+- 원인: PostgreSQL `regr_slope()`가 `double precision`을 반환하지만 두 번째 인자를 받는 `round` 함수는 `numeric` 타입을 요구함.
+- 해결: 계산식은 변경하지 않고 `trend_per_period::numeric`으로 명시적 형변환한 뒤 반올림하도록 수정함.

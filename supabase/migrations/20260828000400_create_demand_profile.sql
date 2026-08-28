@@ -98,7 +98,7 @@ select item_id,
        round(cv, 4) as cv,
        round(cv * cv, 4) as cv_squared,
        round(case when n_periods > 0 then 100 * (n_periods - n_nonzero_periods)::numeric / n_periods else null end, 2) as zero_demand_rate,
-       round(trend_per_period, 4) as trend,
+       round(trend_per_period::numeric, 4) as trend,
        round(recent_change_rate, 4) as recent_change_rate,
        peak_period,
        case
