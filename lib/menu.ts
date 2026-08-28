@@ -23,6 +23,8 @@ export const adminMenu: MenuItem[] = [
   { href: '/admin', label: '관리자 현황', description: '시스템 운영 현황', icon: 'settings' },
   { href: '/admin/users', label: '사용자 관리', description: '사용자 role과 활성 상태', icon: 'users' },
   { href: '/admin/forecast-settings', label: 'Forecast 설정', description: '학습·검증 기간과 정책', icon: 'forecast' },
+  { href: '/admin/forecast-models', label: 'Forecast 모델', description: 'Baseline 모델과 파라미터', icon: 'forecast' },
+  { href: '/admin/forecast-runs', label: 'Forecast 실행', description: '실행 이력과 stale 상태', icon: 'calculation' },
   { href: '/admin/data-management', label: '데이터 적재', description: '파일 업로드·검증·rollback', icon: 'upload' },
   { href: '/legacy/workflow', label: '기존 업무 화면', description: '레거시 workflow', icon: 'workflow' },
 ];

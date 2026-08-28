@@ -151,3 +151,21 @@
 - 증상: `round(double precision, integer) does not exist`가 `round(trend_per_period, 4)`에서 발생함.
 - 원인: PostgreSQL `regr_slope()`가 `double precision`을 반환하지만 두 번째 인자를 받는 `round` 함수는 `numeric` 타입을 요구함.
 - 해결: 계산식은 변경하지 않고 `trend_per_period::numeric`으로 명시적 형변환한 뒤 반올림하도록 수정함.
+
+## 2026-08-28 — STEP 5 로컬 브라우저 확인 도구 경로 오류
+
+- 증상: 브라우저 화면을 자동 확인하려는 중 `browser-client.mjs`를 찾지 못함.
+- 원인: 현재 세션에 표시된 skill 경로와 실제 설치 경로가 일치하지 않음.
+- 해결: 애플리케이션 파일과 실행 폴더를 기준으로 원인을 확인하고, 브라우저 도구는 경로 확인 후 재시도함.
+
+## 2026-08-28 — 로컬 로그인 실패와 개발 서버 포트 충돌
+
+- 증상: 배포에서는 로그인되지만 `localhost:3000`에서 로그인 실패 메시지가 표시됨.
+- 원인: `localhost:3000`은 `main` 폴더 서버가 사용 중이고, 해당 루트 `.env.local`에는 예시 Supabase URL이 남아 있었음. STEP 5 worktree 서버는 다른 포트로 실행되어 브라우저가 올바른 환경을 사용하지 못함.
+- 해결: `main`과 worktree의 개발 서버를 모두 종료한 뒤, 실제 Supabase 환경변수가 있는 STEP 5 worktree에서 하나의 개발 서버만 실행하고 그 포트로 접속함.
+
+## 2026-08-28 — STEP 6 Forecast Engine RED 테스트의 미구현 모델 import 오류
+
+- 증상: `lib/forecast-engine-model.test.ts` 실행 시 `Cannot find module .../lib/forecast-engine-model.ts`가 발생함.
+- 원인: Forecast 화면 모델을 구현하기 전에 TDD 테스트가 해당 모듈을 import함.
+- 해결: RED 결과를 확인한 후 Forecast run 정규화, stale 판정, 계산 불가 표시 함수를 구현함.
