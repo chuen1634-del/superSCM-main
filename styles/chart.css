@@ -1,0 +1,5 @@
+.scm-chart-grid {
+  background-image: linear-gradient(to right, var(--line) 1px, transparent 1px), linear-gradient(to bottom, var(--line) 1px, transparent 1px);
+  background-size: 10% 25%;
+}
+.scm-chart-legend { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-5); color: var(--muted); font-size: var(--text-sm); }
