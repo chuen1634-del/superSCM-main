@@ -1,6 +1,46 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { normalizeLeadtimeGap, normalizeStockoutKpi, normalizeStockoutRisk } from './scm-model.ts';
+import {
+  normalizeBomRequirement,
+  normalizeDemandProfileRt,
+  normalizeLeadtimeGap,
+  normalizeOlAccuracy,
+  normalizeShipmentTrend,
+  normalizeStockoutKpi,
+  normalizeStockoutRisk,
+} from './scm-model.ts';
+
+test('normalizes a shipment trend row and preserves missing values as null', () => {
+  assert.deepEqual(normalizeShipmentTrend({
+    item_code: '602K02693',
+    month: '2026-08',
+    shipment_count: 40,
+    shipment_qty: '779.0',
+    rolling_avg: 772.3,
+  }), {
+    itemCode: '602K02693',
+    itemName: null,
+    period: '2026-08',
+    shipmentCount: 40,
+    shipmentQty: 779,
+    rollingAverage: 772.3,
+  });
+});
+
+test('normalizes demand profile, OL accuracy, and BOM requirement rows', () => {
+  assert.deepEqual(normalizeDemandProfileRt({ 품목코드: '602K02693', 일평균수요: 12.5, reason_code: 'NO_USAGE' }), {
+    itemCode: '602K02693', itemName: null, validDays: null, dailyDemandAvg: 12.5,
+    dailyDemandSd: null, cv: null, trend: null, source: null, reasonCode: 'NO_USAGE',
+  });
+  assert.deepEqual(normalizeOlAccuracy({ model_base: 'A', fiscal_year: 'FY26', accuracy: 0.92, reason_code: null }), {
+    modelBase: 'A', period: null, fiscalYear: 'FY26', olQty: null, actualQty: null,
+    accuracy: 0.92, errorQty: null, reasonCode: null,
+  });
+  assert.deepEqual(normalizeBomRequirement({ model_base: 'A', item_code: 'P1', requirement_qty: 4, reason_code: 'NO_BOM' }), {
+    modelBase: 'A', itemCode: 'P1', itemName: null, bomQty: null, attachmentRate: null,
+    requiredQty: 4, reasonCode: 'NO_BOM',
+  });
+});
 
 test('normalizes analytics leadtime rows into the screen model', () => {
   const result = normalizeLeadtimeGap({

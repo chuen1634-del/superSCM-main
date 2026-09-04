@@ -36,6 +36,48 @@ export type StockoutKpi = {
   avgStockoutDays: number | null;
 };
 
+export type ShipmentTrend = {
+  itemCode: string;
+  itemName: string | null;
+  period: string | null;
+  shipmentCount: number | null;
+  shipmentQty: number | null;
+  rollingAverage: number | null;
+};
+
+export type DemandProfileRt = {
+  itemCode: string;
+  itemName: string | null;
+  validDays: number | null;
+  dailyDemandAvg: number | null;
+  dailyDemandSd: number | null;
+  cv: number | null;
+  trend: number | null;
+  source: string | null;
+  reasonCode: string | null;
+};
+
+export type OlAccuracy = {
+  modelBase: string;
+  period: string | null;
+  fiscalYear: string | null;
+  olQty: number | null;
+  actualQty: number | null;
+  accuracy: number | null;
+  errorQty: number | null;
+  reasonCode: string | null;
+};
+
+export type BomRequirement = {
+  modelBase: string;
+  itemCode: string;
+  itemName: string | null;
+  bomQty: number | null;
+  attachmentRate: number | null;
+  requiredQty: number | null;
+  reasonCode: string | null;
+};
+
 function value(row: Record<string, unknown>, keys: string[]) {
   for (const key of keys) {
     if (row[key] !== undefined && row[key] !== null && row[key] !== '') return row[key];
@@ -52,6 +94,11 @@ function numberValue(row: Record<string, unknown>, keys: string[]) {
 
 function stringValue(row: Record<string, unknown>, keys: string[], fallback = '') {
   return String(value(row, keys) ?? fallback);
+}
+
+function nullableStringValue(row: Record<string, unknown>, keys: string[]) {
+  const raw = value(row, keys);
+  return raw === null ? null : String(raw);
 }
 
 function stockoutStatus(value: unknown): StockoutRiskStatus {
@@ -102,5 +149,55 @@ export function normalizeStockoutKpi(row: Record<string, unknown>): StockoutKpi 
     nUnknown: numberValue(row, ['n_unknown', 'unknown_count', '계산불가품목수']) ?? 0,
     nWithin30d: numberValue(row, ['n_within_30d', 'within_30_days', '30일이내소진']) ?? 0,
     avgStockoutDays: numberValue(row, ['avg_stockout_days', 'average_stockout_days', '평균소진일수']),
+  };
+}
+
+export function normalizeShipmentTrend(row: Record<string, unknown>): ShipmentTrend {
+  return {
+    itemCode: stringValue(row, ['item_code', 'item_id', '품목코드'], '미정'),
+    itemName: nullableStringValue(row, ['item_name', '품목명']),
+    period: nullableStringValue(row, ['period', 'month', 'shipment_month', '기준월']),
+    shipmentCount: numberValue(row, ['shipment_count', 'n_shipments', 'shipment_cnt', '선적건수']),
+    shipmentQty: numberValue(row, ['shipment_qty', 'total_shipment_qty', 'qty', '선적수량']),
+    rollingAverage: numberValue(row, ['rolling_average', 'rolling_avg', 'moving_average', '이동평균']),
+  };
+}
+
+export function normalizeDemandProfileRt(row: Record<string, unknown>): DemandProfileRt {
+  return {
+    itemCode: stringValue(row, ['item_code', 'item_id', '품목코드'], '미정'),
+    itemName: nullableStringValue(row, ['item_name', '품목명']),
+    validDays: numberValue(row, ['valid_days', 'n_days', '유효일수']),
+    dailyDemandAvg: numberValue(row, ['daily_demand_avg', 'daily_usage_avg', 'avg_daily_demand', '일평균수요']),
+    dailyDemandSd: numberValue(row, ['daily_demand_sd', 'daily_usage_sd', 'sd_daily_demand', '일수요표준편차']),
+    cv: numberValue(row, ['cv', '변동계수']),
+    trend: numberValue(row, ['trend', 'demand_trend', '추세']),
+    source: nullableStringValue(row, ['source', '산출근거']),
+    reasonCode: nullableStringValue(row, ['reason_code', 'reason', '사유코드']),
+  };
+}
+
+export function normalizeOlAccuracy(row: Record<string, unknown>): OlAccuracy {
+  return {
+    modelBase: stringValue(row, ['model_base', 'model_base_name', 'model', '모델베이스'], '미정'),
+    period: nullableStringValue(row, ['period', 'month', '기준월']),
+    fiscalYear: nullableStringValue(row, ['fiscal_year', 'fy', '회계연도']),
+    olQty: numberValue(row, ['ol_qty', 'ol_demand', 'planned_qty', 'ol수량']),
+    actualQty: numberValue(row, ['actual_qty', 'actual_demand', 'actual_quantity', '실적수량']),
+    accuracy: numberValue(row, ['accuracy', 'accuracy_rate', '정확도']),
+    errorQty: numberValue(row, ['error_qty', 'error_quantity', '오차수량']),
+    reasonCode: nullableStringValue(row, ['reason_code', 'reason', '사유코드']),
+  };
+}
+
+export function normalizeBomRequirement(row: Record<string, unknown>): BomRequirement {
+  return {
+    modelBase: stringValue(row, ['model_base', 'model_base_name', 'model', '모델베이스'], '미정'),
+    itemCode: stringValue(row, ['item_code', 'item_id', 'part_code', '품목코드', '부품코드'], '미정'),
+    itemName: nullableStringValue(row, ['item_name', 'part_name', '품목명', '부품명']),
+    bomQty: numberValue(row, ['bom_qty', 'bom_quantity', 'quantity_per_unit', 'BOM수량']),
+    attachmentRate: numberValue(row, ['attachment_rate', 'attach_rate', '장착률']),
+    requiredQty: numberValue(row, ['required_qty', 'requirement_qty', 'required_quantity', '소요수량']),
+    reasonCode: nullableStringValue(row, ['reason_code', 'reason', '사유코드']),
   };
 }
